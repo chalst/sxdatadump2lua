@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+#Convert SOFUX data dumps to Lua data files
+#(C) Charles Stewart, 2011
+
+open(POSTS, "<posts.xml");
+$_=<POSTS>;     # <?xml> directive
+$line=<POSTS>;  # <posts> container
+unless ($line ="<posts>") { die "Unexpected format"; };
+
+while ($_=<POSTS>) {
+    last if /posts>/;
+    $type = /PostTypeId="1"/ ? "question" : "answer" ;
+    s/<row/\{/;
+    s/" \/>/"\}/;
+    s/" /", /g;
+    print ($type . $_);
+};
+
+close(POSTS);
+	
+    
+    
+
