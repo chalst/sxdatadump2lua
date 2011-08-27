@@ -1,7 +1,7 @@
-Copyright (C) Charles Stewart, August 2011 and later
-License: GPL v3
-
-http://www.advogato.org/proj/sxdatadump2lua/
+Copyright: (C) Charles Stewart, August 2011 and later
+License: GPL v3 (http://www.gnu.org/licenses/gpl-3.0.html)
+Project page: http://www.advogato.org/proj/sxdatadump2lua/
+Github repo: https://github.com/chalst/sxdatadump2lua
 
 Convert Stack Exchange data dump directories to Lua conf files and manipulate them.
 
