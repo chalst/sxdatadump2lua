@@ -4,7 +4,7 @@
 -- as output by sxdatadump2lua
 
 users = {type="users"}
-posts = {type="posts"}
+posts = {type="posts"}; questions = {}
 comments = {type="comments"}
 
 unsxquotations = {
@@ -36,13 +36,15 @@ type_trans_fwd = {
 	-- Currently only such parameter, would need alternatives if we
 	-- treated alternative tlts differently
 	Id=tonumber, 
+	Views=tonumber, 
+	Votes=tonumber, UpVotes=tonumber, DownVotes=tonumber,
 	ParentId = follow_post_index, -- Used only by answers
 	AcceptedAnswerId = follow_post_index, -- Used only by questions
 	PostId = follow_post_index, -- Used by comments, posthistory, and votes
 	UserId = follow_index_fn (users), -- Used by badges and posthistory
-	Views=tonumber, 
-	Votes=tonumber, UpVotes=tonumber, DownVotes=tonumber,
-	Body=unquote_sx, Text=unquote_sx }
+	Body=unquote_sx, Title=unquote_sx, 
+	AboutMe=unquote_sx,
+	Text=unquote_sx }
 
 function transform_table (trans, x)
 	local res = {}
@@ -59,6 +61,7 @@ function add_row (tlt, trans, row)
 	-- tlt: top-level table
 	local i=tonumber(row.Id)
 	tlt[i] = transform_table (trans, row)
+	return tlt[i]
 end
 
 -- Now come the functions that interpret the Lua-ised data dump.
@@ -69,12 +72,16 @@ end
 
 function question (row)
 	row.isquestion = true
-	add_row (posts, type_trans_fwd, row)
+	this = add_row (posts, type_trans_fwd, row)
+	this.children = {}
+	questions[1+#questions] = this
 end
 	 
 function answer (row)
 	row.isquestion = false
-	add_row (posts, type_trans_fwd, row)
+	this = add_row (posts, type_trans_fwd, row)
+	local siblings = this.ParentId.children
+	siblings[1+#siblings] = this
 end
 
 function comment (row)
