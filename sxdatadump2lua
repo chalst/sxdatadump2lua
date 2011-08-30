@@ -2,22 +2,57 @@
 #Convert SOFUX data dumps to Lua data files
 #(C) Charles Stewart, 2011
 
-open(POSTS, "<posts.xml");
-$_=<POSTS>;     # <?xml> directive
-$line=<POSTS>;  # <posts> container
-unless ($line ="<posts>") { die "Unexpected format"; };
+$directory=$ARGV[0];
+die "Not a data dump directory!" unless -f $directory . "/posts.xml";
 
-while ($_=<POSTS>) {
-    last if /posts>/;
-    $type = /PostTypeId="1"/ ? "question" : "answer" ;
-    s/<row/\{/;
-    s/" \/>/"\}/;
-    s/" /", /g;
-    print ($type . $_);
+# -- Functions for determing type of <row /> entries and returning appropriate 
+# -- Lua functions.
+#const_ss takes a scalar and returns a function taking a second scalar, which it ignores 
+#to return the first scalar.  It is a bit like the K combinator.  
+sub const_ss {
+    my ($x) = @_;
+    return sub {
+	my ($y) = @_;
+	return $x;
+    };
 };
 
-close(POSTS);
-	
-    
-    
+#post_type_function decides if row entries from posts.xml are questions or answers.
+$post_type_function = sub {
+    my ($line) = @_;
+    if ($line =~ /PostTypeId="1"/) {
+	return "question";
+    } else {
+	return "answer";
+    };
+};
+
+#The bir that opens, iterates, and 
+sub process_dfile {
+    my ($collection, $type_test) = @_;
+    $file = $directory . "/" . $collection . ".xml";
+    die "File " . $file . "doesn't exist" unless -f $file;
+
+    open(DFILE, $file);
+
+    $_=<DFILE>;     # line 1: <?xml> directive, ignore
+    $_=<DFILE>;     # line 2: <posts> container, test
+    die "Unexpected format" unless $_=~"^<$collection>";
+
+    while (<DFILE>) {
+	last if /^<\/$collection>/;
+	# $type = /PostTypeId="1"/ ? "question" : "answer" ;
+	$type = $type_test->($_);
+	s/<row/\{/;
+	s/" \/>/"\}/;
+	s/" /", /g;
+	print ($type . $_);
+    };
+
+    close(DFILE);
+};
+
+process_dfile ("users", const_ss("user"));
+process_dfile ("posts", $post_type_function);  
+process_dfile ("comments", const_ss("comment"));    
 
